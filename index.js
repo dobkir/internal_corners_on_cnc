@@ -1,6 +1,8 @@
-const WORKPIECE_THICKNESS = 22; // толщина заготовки
-const PARALLAX = 6;  // ширина фрезеровки по пласти
+const WORKPIECE_THICKNESS = 22;  // толщина заготовки
+const ANGLE_MILLING_CUTTERS = 90;  // угол V-обр фрезы
+const CUTTER_ENTRY_ANGLE = 90 - ANGLE_MILLING_CUTTERS / 2;  // угол вхождения фрезы в заготовку
 const DEPTH = 6;  // глубина фрезеровки по Z
+const PARALLAX = DEPTH * getCotan(CUTTER_ENTRY_ANGLE);  // ширина фрезеровки по пласти
 const SAFE_HEIGHT = 20;  // безопасная высота по Z
 const F = 1200;  // скорость рабочего прохода мм в мин
 const ALLOWANCE = 0.10;  // припуск
@@ -11,8 +13,18 @@ const Y1 = null;
 const Y2 = null;
 const Z = WORKPIECE_THICKNESS - DEPTH;
 
+function getTanDeg(deg) {
+    const rad = (deg * Math.PI) / 180;
+    return Math.tan(rad);
+}
+
+function getCotan(deg) {
+    const cotangens = (1 / getTanDeg(deg)).toFixed(3);
+    return parseFloat(cotangens);
+}
+
 function getSafeZ(Z) {
-    const safeZ = (Z + DEPTH + SAFE_HEIGHT).toFixed(2);
+    const safeZ = +(Z + DEPTH + SAFE_HEIGHT).toFixed(2);
     return safeZ;
 }
 
@@ -31,33 +43,33 @@ function getFinalDot(Z) {
     return finalDot;
 }
 
-function negativeOffset(initialPosition) {
+function negativeInitOffset(initialPosition) {
     const displacedPosition = +(initialPosition - ALLOWANCE).toFixed(2);
     return displacedPosition;
 }
 
-function positiveOffset(initialPosition) {
+function positiveInitOffset(initialPosition) {
     const displacedPosition = +(initialPosition + ALLOWANCE).toFixed(2);
     return displacedPosition;
 }
 
 function getInitX1(X1) {
-    const initX1 = negativeOffset(X1);
+    const initX1 = negativeInitOffset(X1);
     return initX1;
 }
 
 function getInitX2(X2) {
-    const initX2 = positiveOffset(X2);
+    const initX2 = positiveInitOffset(X2);
     return initX2;
 }
 
 function getInitY1(Y1) {
-    const initY1 = negativeOffset(Y1);
+    const initY1 = negativeInitOffset(Y1);
     return initY1;
 }
 
 function getInitY2(Y2) {
-    const initY2 = positiveOffset(Y2);
+    const initY2 = positiveInitOffset(Y2);
     return initY2;
 }
 
@@ -117,7 +129,7 @@ function getCode(X1, Y1, X2, Y2, Z) {
 
         const outerString = `
         (Diagonal Line ${index + 1} (${point}))
-        G0X${bazeX}Y${bazeY}Z${getSafeZ(Z)}
+        G0X${bazeX}Y${bazeY}Z${safeZ}
         G1Z${bazeZ}F${F}
         G1X${bazeX}Y${bazeY}
         G1X${initX()}Y${initY()}Z${initZ}
@@ -135,6 +147,12 @@ function getCode(X1, Y1, X2, Y2, Z) {
 }
 
 console.log(getCode(25, 60, 205, 689, 16));
+
+
+// console.log(getCotan(45));
+// console.log(PARALLAX);
+// console.log(typeof PARALLAX);
+
 
 /*
 Test result:
